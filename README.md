@@ -4,6 +4,11 @@
 network in a single HTML file. It runs on your computer, with no account, no server and no uploads.
 
 <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/banner-dark.png">
+  <img alt="tigra: a map of the people you know, built from your LinkedIn export on your computer" src="docs/brand/banner-light.png">
+</picture>
+
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/constellations-dark.png">
   <img alt="Constellations view: contacts grouped into communities around you, coloured by group" src="docs/screenshots/constellations-light.png">
 </picture>

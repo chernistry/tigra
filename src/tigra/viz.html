@@ -91,12 +91,14 @@
   --scheme: light;
   --page: var(--syd-page); --surface: var(--syd-surface); --ink: var(--syd-ink); --ink-2: var(--syd-muted);
   --muted: var(--syd-muted); --grid: var(--syd-rule); --axis: var(--syd-edge); --border: var(--syd-rule);
-  --wash: rgba(31, 36, 43, 0.06); --accent: var(--syd-accent-text);
+  --wash: rgba(31, 36, 43, 0.06); --accent: var(--tigra-text-light);
+  /* tigra accent, in the shared product-accent pattern: fill for marks, text for links (measured: 5.75:1 and 6.97:1) */
+  --tigra-fill: #C45A15; --tigra-tone: #B8510F; --tigra-text-light: #A84A0C; --tigra-text-dark: #E8833A;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --scheme: dark; --wash: rgba(228, 232, 237, 0.07); }
+  :root:not([data-theme="light"]) { --scheme: dark; --wash: rgba(228, 232, 237, 0.07); --accent: var(--tigra-text-dark); }
 }
-:root[data-theme="dark"] { --scheme: dark; --wash: rgba(228, 232, 237, 0.07); color-scheme: dark; }
+:root[data-theme="dark"] { --scheme: dark; --wash: rgba(228, 232, 237, 0.07); --accent: var(--tigra-text-dark); color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
@@ -181,10 +183,10 @@ tbody tr:hover { background: var(--wash); }
   .only-narrow { display: inline-block; }
   #q { width: 100%; max-width: none; }
   .search { flex: 1 1 100%; order: 5; }
-  #side { position: absolute; z-index: 15; inset: 0 auto 0 0; width: min(300px, 88vw); box-shadow: 4px 0 24px rgba(0,0,0,.2); }
+  #side { position: absolute; z-index: 15; inset: 0 auto 0 0; width: min(300px, 88vw); box-shadow: 0 6px 24px rgba(0,0,0,.18); }
   #side:not(.open) { display: none; }
   #inspector { position: absolute; z-index: 16; left: 0; right: 0; bottom: 0; width: auto; max-height: 55%; border-left: 0;
-    border-top: 1px solid var(--border); box-shadow: 0 -6px 24px rgba(0,0,0,.2); }
+    border-top: 1px solid var(--border); box-shadow: 0 6px 24px rgba(0,0,0,.18); }
   .seg { max-width: 100%; overflow-x: auto; }
 }
 </style>
