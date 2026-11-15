@@ -333,15 +333,21 @@ def _load_invitations(con, text: str, source: str) -> dict:
             continue
         matched += 1
         src, dst = (OWNER, person_id) if outgoing else (person_id, OWNER)
-        sent = _parse_date(r.get("Sent At", "").split(",")[0], "%m/%d/%y")
-        candidate = (sent, bool(r.get("Message", "").strip()))
+        raw = r.get("Sent At", "").strip()
+        sent = _parse_date(raw.split(",")[0], "%m/%d/%y")
+        try:  # the time of day orders two invitations sent on one date
+            at = datetime.strptime(raw, "%m/%d/%y, %I:%M %p")
+        except ValueError:
+            at = datetime(sent.year, sent.month, sent.day) if sent else datetime.min
+        candidate = (at, bool(r.get("Message", "").strip()), sent)
         best = latest.get((src, dst))
-        if best is None or (candidate[0] or date.min, candidate[1]) > (best[0] or date.min, best[1]):
+        if best is None or candidate[:2] > best[:2]:
             latest[(src, dst)] = candidate
-    for (src, dst), (sent, has_note) in sorted(latest.items()):
+    for (src, dst), (_, has_note, sent) in sorted(latest.items()):
         note = "with note" if has_note else None  # whether there was one, never its text
         edge_id = _edge(con, src, dst, "invited", source, valid_from=sent, note=note, refresh=True)
-        con.execute("UPDATE edge_source SET note = ? WHERE edge_id = ? AND source = ?", [note, edge_id, source])
+        # The newest export decides, as for the date: older sources of this edge lose a stale flag too.
+        con.execute("UPDATE edge_source SET note = ? WHERE edge_id = ?", [note, edge_id])
     return {"invitations": len(rows), "invites_matched": matched, "invites_unmatched": unmatched}
 
 

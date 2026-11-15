@@ -123,6 +123,35 @@ def test_repeated_invitations_one_way_keep_the_newest_date_and_its_note(tmp_path
     assert results == {json.dumps({"date": "2025-08-01", "dir": "out", "note": False}, sort_keys=True)}
 
 
+def test_invitation_time_of_day_and_a_newer_export_decide_the_note(tmp_path):
+    d = tmp_path / "exp"
+    d.mkdir()
+    for f in EXPORT.iterdir():
+        (d / f.name).write_bytes(f.read_bytes())
+    head, *rest = (d / "Invitations.csv").read_text().splitlines(keepends=True)
+    others = [r for r in rest if "test-person02" not in r]
+    row = (
+        'Test Owner,Test Person02,"{at}",{msg},OUTGOING,'
+        "https://www.linkedin.com/in/test-owner,https://www.linkedin.com/in/test-person02\n"
+    )
+    morning, evening = row.format(at="8/1/25, 9:15 AM", msg='"Hi"'), row.format(at="8/1/25, 8:00 PM", msg="")
+
+    def invite(con):
+        return next(n for n in build_model(con)["nodes"] if n["id"] == "test-person02")["invite"]
+
+    for rows in ([head, morning, evening, *others], [head, evening, morning, *others]):
+        (d / "Invitations.csv").write_text("".join(rows))
+        con = duckdb.connect(":memory:")
+        load_export(con, Export(d), "fixture")
+        assert invite(con) == {"dir": "out", "date": "2025-08-01", "note": False}  # the evening one, no note
+    con = duckdb.connect(":memory:")
+    (d / "Invitations.csv").write_text("".join([head, row.format(at="7/1/25, 9:15 AM", msg='"Hi"'), *others]))
+    load_export(con, Export(d), "export:July")
+    (d / "Invitations.csv").write_text("".join([head, evening, *others]))
+    load_export(con, Export(d), "export:August")
+    assert invite(con) == {"dir": "out", "date": "2025-08-01", "note": False}
+
+
 def test_csv_field_limit_is_restored_after_reading():
     import csv
 
