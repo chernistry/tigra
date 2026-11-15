@@ -17,8 +17,8 @@ from datetime import date
 
 import networkx as nx
 
-from tiegraph import temporal
-from tiegraph.load import OWNER, is_generic_org
+from tigra import temporal
+from tigra.load import OWNER, is_generic_org
 
 STOPWORDS = frozenset(
     [

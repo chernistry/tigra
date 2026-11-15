@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from tiegraph.export import Export
+from tigra.export import Export
 
 OWNER = "me"
 CONNECTIONS_HEADER = "First Name,Last Name,URL,Email Address,Company,Position,Connected On"

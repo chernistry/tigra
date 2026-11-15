@@ -3,5 +3,5 @@
 Not affiliated with or endorsed by LinkedIn.
 """
 
-NAME = "tiegraph"
+NAME = "tigra"
 __version__ = "0.1.0"

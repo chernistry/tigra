@@ -10,11 +10,11 @@ from pathlib import Path
 
 import duckdb
 
-from tiegraph import NAME, __version__
-from tiegraph.export import Export, ExportError
-from tiegraph.load import load_export, read_aliases
-from tiegraph.model import build_model
-from tiegraph.viz import render_html, write_private
+from tigra import NAME, __version__
+from tigra.export import Export, ExportError
+from tigra.load import load_export, read_aliases
+from tigra.model import build_model
+from tigra.viz import render_html, write_private
 
 
 def main(argv: list[str] | None = None) -> int:

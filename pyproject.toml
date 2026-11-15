@@ -1,5 +1,5 @@
 [project]
-name = "tiegraph"
+name = "tigra"
 dynamic = ["version"]
 description = "Turn your LinkedIn data export into an offline, interactive graph of your network."
 readme = "README.md"
@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 [project.scripts]
-tiegraph = "tiegraph.cli:main"
+tigra = "tigra.cli:main"
 
 [dependency-groups]
 dev = [
@@ -33,7 +33,7 @@ requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
-path = "src/tiegraph/__init__.py"
+path = "src/tigra/__init__.py"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

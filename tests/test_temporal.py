@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from tiegraph import temporal
+from tigra import temporal
 
 MONDAY = date(2024, 1, 1)
 

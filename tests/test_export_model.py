@@ -8,11 +8,11 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from tiegraph import cli
-from tiegraph.export import Export, ExportError
-from tiegraph.load import check_invariants, init_schema, load_export, read_aliases
-from tiegraph.model import build_model, classify_domain
-from tiegraph.viz import render_html
+from tigra import cli
+from tigra.export import Export, ExportError
+from tigra.load import check_invariants, init_schema, load_export, read_aliases
+from tigra.model import build_model, classify_domain
+from tigra.viz import render_html
 
 POSIX = pytest.mark.skipif(os.name == "nt", reason="POSIX file modes")
 
@@ -192,7 +192,7 @@ def test_message_text_never_stored_or_rendered(loaded, tmp_path):
 
 def test_old_database_without_dm_event_is_migrated(tmp_path):
     con = duckdb.connect(str(tmp_path / "old.duckdb"))
-    schema = (Path(__file__).parents[1] / "src" / "tiegraph" / "schema.sql").read_text()
+    schema = (Path(__file__).parents[1] / "src" / "tigra" / "schema.sql").read_text()
     con.execute("".join(line for line in schema.splitlines(keepends=True) if "dm_event" not in line))
     broken = tmp_path / "broken"
     broken.mkdir()
@@ -259,7 +259,7 @@ def test_owner_tie_without_profile_refuses_to_guess(con, tmp_path):
 
 @POSIX
 def test_write_private_replaces_world_readable_file(tmp_path):
-    from tiegraph.viz import write_private
+    from tigra.viz import write_private
 
     target = tmp_path / "graph.json"
     target.write_text("old")
@@ -344,7 +344,7 @@ def test_cli_rejects_what_is_not_an_export(tmp_path, capsys, make):
     elif make == "not_zip":
         target.write_text("plain text")
     assert cli.main(["build", str(target), "--out", str(tmp_path / "out")]) == 2
-    assert "tiegraph:" in capsys.readouterr().err
+    assert "tigra:" in capsys.readouterr().err
     assert not (tmp_path / "out").exists()
 
 

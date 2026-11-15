@@ -1,4 +1,4 @@
-# tiegraph
+# tigra
 
 **TL;DR:** download your LinkedIn data export, run one command, and get an interactive map of your
 network in a single HTML file. It runs on your computer, with no account, no server and no uploads.
@@ -27,11 +27,11 @@ With [uv](https://docs.astral.sh/uv/getting-started/installation/) installed, pa
 (or type the first part and drag the ZIP onto the terminal window to fill in its path):
 
 ```bash
-uvx --from git+https://github.com/chernistry/tiegraph tiegraph build ~/Downloads/Basic_LinkedInDataExport_*.zip --open
+uvx --from git+https://github.com/chernistry/tigra tigra build ~/Downloads/Basic_LinkedInDataExport_*.zip --open
 ```
 
 → It prints something like `321 contacts · 10 communities · 70 you messaged · 2 connection bursts`
-and opens the graph in your browser. The files are in `./tiegraph-out/`: `graph.html` (open it any time,
+and opens the graph in your browser. The files are in `./tigra-out/`: `graph.html` (open it any time,
 offline) and `graph.json` (the same data, for your own scripts).
 
 ## What you can see
@@ -77,7 +77,7 @@ growth rate of its period (periods split by CUSUM changepoints), with Benjamini-
 under a steady rate they appear by chance in under 5% of simulated exports.
 The page itself is one HTML file with the data embedded and no external files.
 
-Options: `tiegraph build --help` (`--out`, `--aliases` to merge company name variants, `--db` to keep the database).
+Options: `tigra build --help` (`--out`, `--aliases` to merge company name variants, `--db` to keep the database).
 
 An aliases file is a two-column CSV. Every variant on the left is counted as the name on the right:
 
@@ -110,5 +110,5 @@ Report security issues privately: see [SECURITY.md](SECURITY.md). Changes: [CHAN
 
 [Apache-2.0](LICENSE).
 
-tiegraph is an independent project. It is not affiliated with, endorsed by or sponsored by LinkedIn.
+tigra is an independent project. It is not affiliated with, endorsed by or sponsored by LinkedIn.
 "LinkedIn" is used only to say which data export the tool reads.

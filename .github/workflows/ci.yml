@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           uv run python tests/synthetic.py out/export.zip
-          uv run tiegraph build out/export.zip --out out/a
-          uv run tiegraph build out/export.zip --out out/b
+          uv run tigra build out/export.zip --out out/a
+          uv run tigra build out/export.zip --out out/b
           cmp out/a/graph.html out/b/graph.html
           cmp out/a/graph.json out/b/graph.json
