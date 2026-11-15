@@ -17,6 +17,13 @@ import statistics
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 
+# English month names fixed here: strftime's %b follows the locale and "%-d" does not exist on Windows.
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def _day(d: date, year: bool = True) -> str:
+    return f"{d.day} {MONTHS[d.month - 1]}" + (f" {d.year}" if year else "")
+
 
 def bh(pvalues: list[float]) -> list[float]:
     """Benjamini-Hochberg q-values, in input order."""
@@ -194,7 +201,7 @@ def cohorts(
     for t in chosen:
         members = sorted(pid for pid, d in dated.items() if d in t["days"])
         lo, hi = min(dated[m] for m in members), max(dated[m] for m in members)
-        span = lo.strftime("%-d %b %Y") if lo == hi else f"{lo.strftime('%-d %b')}–{hi.strftime('%-d %b %Y')}"
+        span = _day(lo) if lo == hi else f"{_day(lo, year=lo.year != hi.year)}–{_day(hi)}"
         ratio = t["size"] / t["expected"]
         out.append(
             {

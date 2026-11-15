@@ -72,6 +72,16 @@ def test_cohorts_find_a_burst_with_its_members():
     assert temporal.cohorts(dated, None) == temporal.cohorts(dated, temporal.regimes(list(dated.values())))
 
 
+def test_cohort_dates_are_english_and_portable():
+    # strftime("%-d %b") fails on Windows and follows the locale; labels must not depend on either
+    assert temporal._day(date(2025, 9, 3)) == "3 Sep 2025"
+    assert temporal._day(date(2025, 12, 30), year=False) == "30 Dec"
+    days = {f"p{i}": date(2025, 12, 30) + timedelta(days=i % 5) for i in range(40)}
+    background = {f"q{i}": date(2025, 1, 1) + timedelta(days=9 * i) for i in range(40)}
+    labels = [c["label"] for c in temporal.cohorts(days | background)]
+    assert any(label.startswith("30 Dec 2025–3 Jan 2026 · ") for label in labels), labels
+
+
 def test_cohorts_judge_a_window_crossing_regimes_by_both_rates():
     # Slow regime (1 a week) then fast (3 a day): a 7-day window from the slow regime's last day
     # holds 13 connections, which is ordinary for the fast regime and not a burst.
