@@ -83,11 +83,15 @@ def _read_rows(text: str, first_column: str, name: str) -> list[dict]:
     """Rows of an export CSV; skips LinkedIn's free-text preamble before the header line."""
     # A field can be as long as its file; the csv module's default limit (128 KiB) would reject a long message
     # body that the analysis never reads.
-    csv.field_size_limit(max(csv.field_size_limit(), min(len(text) + 1, 2**31 - 1)))
-    lines = text.splitlines(keepends=True)
-    for i, line in enumerate(lines):
-        if (next(csv.reader([line]), None) or [""])[0].strip() == first_column:
-            return list(csv.DictReader(io.StringIO("".join(lines[i:]))))
+    # The limit is process-wide, so it is restored before returning.
+    previous = csv.field_size_limit(max(csv.field_size_limit(), min(len(text) + 1, 2**31 - 1)))
+    try:
+        lines = text.splitlines(keepends=True)
+        for i, line in enumerate(lines):
+            if (next(csv.reader([line]), None) or [""])[0].strip() == first_column:
+                return list(csv.DictReader(io.StringIO("".join(lines[i:]))))
+    finally:
+        csv.field_size_limit(previous)
     raise ValueError(f"{name}: header line starting with {first_column!r} not found.")
 
 
@@ -149,6 +153,7 @@ def _edge(
         """,
         [edge_id, source, datetime.now(UTC).replace(tzinfo=None), note, edge_id, source],
     )
+    return edge_id
 
 
 def _load_connections(con, text: str, source: str, aliases: dict[str, str]) -> dict:
@@ -314,6 +319,7 @@ def _load_invitations(con, text: str, source: str) -> dict:
     rows = _read_rows(text, "From", "Invitations.csv")
     resolve = _Resolver(con)
     matched = unmatched = 0
+    latest = {}  # (src, dst) -> (date, has_note): the newest invitation per direction, whatever the row order
     for r in rows:
         outgoing = r.get("Direction", "").strip().upper() == "OUTGOING"
         url, name = (
@@ -327,17 +333,15 @@ def _load_invitations(con, text: str, source: str) -> dict:
             continue
         matched += 1
         src, dst = (OWNER, person_id) if outgoing else (person_id, OWNER)
-        sent_at = r.get("Sent At", "").split(",")[0]
-        _edge(
-            con,
-            src,
-            dst,
-            "invited",
-            source,
-            valid_from=_parse_date(sent_at, "%m/%d/%y"),
-            note="with note" if r.get("Message", "").strip() else None,  # whether there was one, never its text
-            refresh=True,
-        )
+        sent = _parse_date(r.get("Sent At", "").split(",")[0], "%m/%d/%y")
+        candidate = (sent, bool(r.get("Message", "").strip()))
+        best = latest.get((src, dst))
+        if best is None or (candidate[0] or date.min, candidate[1]) > (best[0] or date.min, best[1]):
+            latest[(src, dst)] = candidate
+    for (src, dst), (sent, has_note) in sorted(latest.items()):
+        note = "with note" if has_note else None  # whether there was one, never its text
+        edge_id = _edge(con, src, dst, "invited", source, valid_from=sent, note=note, refresh=True)
+        con.execute("UPDATE edge_source SET note = ? WHERE edge_id = ? AND source = ?", [note, edge_id, source])
     return {"invitations": len(rows), "invites_matched": matched, "invites_unmatched": unmatched}
 
 

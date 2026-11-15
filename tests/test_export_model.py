@@ -101,6 +101,39 @@ def test_latest_invitation_wins_whatever_the_row_order(tmp_path):
     assert results == {json.dumps({"date": "2025-08-01", "dir": "in", "note": False}, sort_keys=True)}
 
 
+def test_repeated_invitations_one_way_keep_the_newest_date_and_its_note(tmp_path):
+    d = tmp_path / "exp"
+    d.mkdir()
+    for f in EXPORT.iterdir():
+        (d / f.name).write_bytes(f.read_bytes())
+    head, *rest = (d / "Invitations.csv").read_text().splitlines(keepends=True)
+    others = [r for r in rest if "test-person02" not in r]
+    july = (
+        'Test Owner,Test Person02,"7/1/25, 9:15 AM","Hi, we met.",OUTGOING,'
+        "https://www.linkedin.com/in/test-owner,https://www.linkedin.com/in/test-person02\n"
+    )
+    august = july.replace("7/1/25", "8/1/25").replace('"Hi, we met."', "")
+    results = set()
+    for rows in ([head, july, august, *others], [head, august, july, *others]):
+        (d / "Invitations.csv").write_text("".join(rows))
+        con = duckdb.connect(":memory:")
+        load_export(con, Export(d), "fixture")
+        node = next(n for n in build_model(con)["nodes"] if n["id"] == "test-person02")
+        results.add(json.dumps(node["invite"], sort_keys=True))
+    assert results == {json.dumps({"date": "2025-08-01", "dir": "out", "note": False}, sort_keys=True)}
+
+
+def test_csv_field_limit_is_restored_after_reading():
+    import csv
+
+    from tigra.load import _read_rows
+
+    before = csv.field_size_limit()
+    rows = _read_rows("A,B\n" + "1," + "x" * (before + 10) + "\n", "A", "t.csv")
+    assert len(rows[0]["B"]) == before + 10
+    assert csv.field_size_limit() == before
+
+
 def test_a_long_message_body_does_not_stop_the_import(tmp_path):
     d = tmp_path / "exp"
     d.mkdir()
