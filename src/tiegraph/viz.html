@@ -704,8 +704,8 @@ function renderInspector() {
         ...(n.conv.my_reply_h === null ? [] : [["Your reply", `median ${fmtHours(n.conv.my_reply_h)}`]])] : []),
       ["Warmth", `${n.warmth.toFixed(2)}`]];
     const inv = n.invite ? [el("h3", {}, "Invitation"), el("p", { style: "margin:0" },
-      `${n.invite.dir === "out" ? "You invited them" : "They invited you"}${n.invite.date ? ` on ${n.invite.date}` : ""}`),
-      ...(n.invite.note ? [el("blockquote", {}, n.invite.note)] : [])] : [];
+      `${n.invite.dir === "out" ? "You invited them" : "They invited you"}${n.invite.date ? ` on ${n.invite.date}` : ""}` +
+      (n.invite.note ? ", with a note" : ""))] : [];
     const url = safeProfile(n.url);
     box.replaceChildren(close, el("h2", {}, n.name), el("p", { class: "pos" }, [n.position, n.company].filter(Boolean).join(" · ") || "No position listed"),
       el("div", {}, badges),

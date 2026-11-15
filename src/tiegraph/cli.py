@@ -1,6 +1,7 @@
 """Command line: a LinkedIn data export in, one offline HTML page out."""
 
 import argparse
+import csv
 import json
 import os
 import sys
@@ -48,7 +49,7 @@ def _build(args: argparse.Namespace) -> int:
                 model = build_model(con, seed=args.seed)
             finally:
                 con.close()
-    except (ExportError, FileNotFoundError, ValueError) as e:
+    except (ExportError, FileNotFoundError, ValueError, csv.Error) as e:
         return _fail(str(e))
     page = args.out / "graph.html"
     write_private(args.out / "graph.json", json.dumps(model, ensure_ascii=False, indent=1))

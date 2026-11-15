@@ -70,14 +70,54 @@ def test_messages_aggregate_per_direction(loaded):
     assert not any("not-connected" in k for pair in messaged for k in pair)
 
 
-def test_invitations_keep_direction_and_note(loaded):
+def test_invitations_keep_direction_and_whether_there_was_a_note(loaded):
     con, _ = loaded
     assert set(_edges(con, "invited")) == {("me", "test-person02"), ("test-person05", "me")}
-    note = con.execute(
-        "SELECT s.note FROM edge e JOIN edge_source s ON s.edge_id = e.id "
-        "WHERE e.predicate = 'invited' AND e.dst = 'test-person02'"
-    ).fetchone()[0]
-    assert note == "Hi Test, we met at the meetup."
+    notes = dict(
+        con.execute(
+            "SELECT e.dst, s.note FROM edge e JOIN edge_source s ON s.edge_id = e.id WHERE e.predicate = 'invited'"
+        ).fetchall()
+    )
+    assert notes == {"test-person02": "with note", "me": None}  # the flag, never the text
+
+
+def test_latest_invitation_wins_whatever_the_row_order(tmp_path):
+    d = tmp_path / "exp"
+    d.mkdir()
+    for f in EXPORT.iterdir():
+        (d / f.name).write_bytes(f.read_bytes())
+    inv = (d / "Invitations.csv").read_text().splitlines(keepends=True)
+    extra = (
+        'Test Person02,Test Owner,"8/1/25, 9:15 AM",,INCOMING,'
+        "https://www.linkedin.com/in/test-person02,https://www.linkedin.com/in/test-owner\n"
+    )
+    results = set()
+    for rows in ([*inv, extra], [inv[0], extra, *inv[1:]]):
+        (d / "Invitations.csv").write_text("".join(rows))
+        con = duckdb.connect(":memory:")
+        load_export(con, Export(d), "fixture")
+        node = next(n for n in build_model(con)["nodes"] if n["id"] == "test-person02")
+        results.add(json.dumps(node["invite"], sort_keys=True))
+    assert results == {json.dumps({"date": "2025-08-01", "dir": "in", "note": False}, sort_keys=True)}
+
+
+def test_a_long_message_body_does_not_stop_the_import(tmp_path):
+    d = tmp_path / "exp"
+    d.mkdir()
+    for f in EXPORT.iterdir():
+        (d / f.name).write_bytes(f.read_bytes())
+    msgs = (d / "messages.csv").read_text().splitlines(keepends=True)
+    body = "x" * 200_000  # over the csv module's default field limit of 131072
+    msgs.append(
+        '"c9","","Test Person01","https://www.linkedin.com/in/test-person01","Test Owner",'
+        f'"https://www.linkedin.com/in/test-owner","2026-08-01 10:00:00 UTC","","{body}","INBOX","","No"\n'
+    )
+    (d / "messages.csv").write_text("".join(msgs))
+    base = load_export(duckdb.connect(":memory:"), Export(EXPORT), "fixture")["messages"]
+    con = duckdb.connect(":memory:")
+    stats = load_export(con, Export(d), "fixture")
+    assert stats["messages"] == base + 1
+    assert body not in repr(con.execute("SELECT * FROM dm_event").fetchall())
 
 
 def test_reload_is_idempotent(loaded):
@@ -124,11 +164,7 @@ def test_node_fields(loaded):
     assert p1["conv"] == {"n": 1, "by_them": 0, "reply_h": 24.0, "my_reply_h": 3384.0}
     assert p1["warmth"] == pytest.approx(2.449 + 0.3, abs=0.002)  # replied within 24 h
     assert nodes["test-person04"]["conv"]["by_them"] == 1  # they wrote first
-    assert nodes["test-person02"]["invite"] == {
-        "dir": "out",
-        "date": "2025-07-01",
-        "note": "Hi Test, we met at the meetup.",
-    }
+    assert nodes["test-person02"]["invite"] == {"dir": "out", "date": "2025-07-01", "note": True}
     assert nodes["test-person05"]["invite"]["dir"] == "in"
     assert nodes["test-person08"]["stage"] == {"org": "Tidewell", "from": "2024-01-01", "to": "2025-06-01"}
     assert nodes["test-person04"]["followed"] and not nodes["test-person01"]["followed"]
@@ -150,7 +186,7 @@ def test_message_text_never_stored_or_rendered(loaded, tmp_path):
     ]
     dump = repr([con.execute(f"SELECT * FROM {t}").fetchall() for (t,) in con.execute("SHOW TABLES").fetchall()])
     model = build_model(con)
-    for marker in ("CONTENT-MARKER-7f3a", "SUBJECT-MARKER-91c2"):
+    for marker in ("CONTENT-MARKER-7f3a", "SUBJECT-MARKER-91c2", "we met at the meetup"):  # DMs and invitation notes
         assert marker not in dump and marker not in json.dumps(model) and marker not in render_html(model)
 
 

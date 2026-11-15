@@ -301,16 +301,17 @@ def build_model(con, *, seed: int = 42, role_k: int = 3, role_min: float = 0.35)
         d["sent" if src == OWNER else "recv"] += int(weight)
         d["first"] = min(filter(None, [d["first"], first]), default=None)
         d["last"] = max(filter(None, [d["last"], last]), default=None)
-    invites = {}
-    for src, dst, sent_on, note in con.execute(
+    invites = {}  # per contact, the latest invitation (fixed order, so the same export gives the same choice)
+    for src, dst, sent_on, has_note in con.execute(
         """
-            SELECT e.src, e.dst, e.valid_from, max(s.note)
+            SELECT e.src, e.dst, e.valid_from, bool_or(s.note IS NOT NULL)
             FROM edge e LEFT JOIN edge_source s ON s.edge_id = e.id
             WHERE e.predicate = 'invited' GROUP BY e.src, e.dst, e.valid_from
+            ORDER BY e.valid_from NULLS FIRST, e.src, e.dst
             """
     ).fetchall():
         out = src == OWNER
-        invites[dst if out else src] = {"dir": "out" if out else "in", "date": _iso(sent_on), "note": note}
+        invites[dst if out else src] = {"dir": "out" if out else "in", "date": _iso(sent_on), "note": bool(has_note)}
     positions = con.execute(
         """
         SELECT e.dst, o.name, o.name_norm, e.valid_from, e.valid_to FROM edge e JOIN org o ON o.id = e.dst

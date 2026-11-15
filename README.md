@@ -63,7 +63,8 @@ Search, filters, a date slider with growth playback, a sortable table and a deta
   either: its Content-Security-Policy blocks every outside connection.
 - The output files are readable by your user only. They contain your contacts' names, so keep them
   private, and do not upload `graph.html` anywhere.
-- Message text is never read into the output: only who, when and which way.
+- Message and invitation text never reaches the output: only who, when, which way, and whether an
+  invitation had a note.
 - Ties between your contacts are **inferred** (same employer, similar job title), not observed:
   the export does not say who knows whom. The page labels them as inferred.
 

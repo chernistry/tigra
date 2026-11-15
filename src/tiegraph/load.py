@@ -81,6 +81,9 @@ def _transaction(con):
 
 def _read_rows(text: str, first_column: str, name: str) -> list[dict]:
     """Rows of an export CSV; skips LinkedIn's free-text preamble before the header line."""
+    # A field can be as long as its file; the csv module's default limit (128 KiB) would reject a long message
+    # body that the analysis never reads.
+    csv.field_size_limit(max(csv.field_size_limit(), min(len(text) + 1, 2**31 - 1)))
     lines = text.splitlines(keepends=True)
     for i, line in enumerate(lines):
         if (next(csv.reader([line]), None) or [""])[0].strip() == first_column:
@@ -332,7 +335,7 @@ def _load_invitations(con, text: str, source: str) -> dict:
             "invited",
             source,
             valid_from=_parse_date(sent_at, "%m/%d/%y"),
-            note=r.get("Message", "").strip() or None,
+            note="with note" if r.get("Message", "").strip() else None,  # whether there was one, never its text
             refresh=True,
         )
     return {"invitations": len(rows), "invites_matched": matched, "invites_unmatched": unmatched}
