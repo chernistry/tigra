@@ -1,0 +1,15 @@
+Notes:
+"When exporting your connection data, you may notice that some of the email addresses are missing. Synthetic fixture, not real people."
+
+First Name,Last Name,URL,Email Address,Company,Position,Connected On
+Test,Person01,https://www.linkedin.com/in/test-person01,,Bramble Ltd.,Platform Engineer,12 Mar 2025
+Test,Person02,https://www.linkedin.com/in/test-person02,,"BRAMBLE, Inc.",Senior Platform Engineer,03 Jul 2025
+Test,Person03,https://www.linkedin.com/in/test-person03,,Bramble,Data Analyst,21 Nov 2025
+Test,Person04,https://www.linkedin.com/in/test-person04,,Quillmark GmbH,Founder & CEO,08 Jan 2026
+Test,Person05,https://www.linkedin.com/in/test-person05,,Quillmark,Technical Recruiter,15 Feb 2026
+Test,Person06,https://www.linkedin.com/in/test-person06,,Stealth Startup,Co-Founder & CEO,30 Sep 2025
+Test,Person07,https://www.linkedin.com/in/test-person07,,Stealth Startup,Founder,02 May 2026
+Test,Person08,https://www.linkedin.com/in/test-person08,,Tidewell Holdings,Security Researcher,19 Aug 2025
+Test,Person09,https://www.linkedin.com/in/test-person09,,Tidewell Corp,Security Engineer,27 Jun 2026
+Test,Person10,,,,,11 Oct 2025
+,,,,,,01 Jan 2024

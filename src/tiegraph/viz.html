@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Network Graph</title>
+<style>
+/* Shared visual system v1 (tokens.css, sha256 23893820a62e1ff4…): the base tokens unchanged, studio accent only. */
+:root {
+  color-scheme: light dark;
+  --syd-page: #FFFFFF;
+  --syd-surface: #F5F7F9;
+  --syd-ink: #1F242B;
+  --syd-muted: #5E646B;
+  --syd-rule: #D5D8DB;
+  --syd-edge: #82878C;
+  --syd-focus: #1F242B;
+  --syd-on-accent: #FFFFFF;
+  --syd-studio-fill: #676D74;
+  --syd-studio-tone: #5A6067;
+  --syd-studio-text-light: #575E67;
+  --syd-studio-text-dark: #969CA5;
+  --syd-accent: #676D74;
+  --syd-accent-tone: #5A6067;
+  --syd-accent-text: #575E67;
+  --syd-font-serif: 'Source Serif 4', Georgia, serif;
+  --syd-font-sans: Inter, system-ui, sans-serif;
+  --syd-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --syd-font-hebrew: 'Noto Sans Hebrew', Inter, sans-serif;
+  --syd-size-caption: 12px;
+  --syd-size-small: 14px;
+  --syd-size-body: 16px;
+  --syd-size-proof-long: 20px;
+  --syd-size-proof: 24px;
+  --syd-size-header-line: 30px;
+  --syd-size-title: 48px;
+  --syd-size-name: 88px;
+  --syd-leading-name: 1.05;
+  --syd-leading-title: 1.15;
+  --syd-leading-text: 1.5;
+  --syd-leading-mono: 1.45;
+  --syd-radius-none: 0px;
+  --syd-radius-badge: 3px;
+  --syd-radius-control: 6px;
+  --syd-space-1: 4px;
+  --syd-space-2: 8px;
+  --syd-space-3: 12px;
+  --syd-space-4: 16px;
+  --syd-space-5: 24px;
+  --syd-space-6: 32px;
+  --syd-space-7: 48px;
+  --syd-space-8: 64px;
+  --syd-space-9: 96px;
+  --syd-hairline: 1px;
+  --syd-focus-width: 2px;
+  --syd-duration-fast: 120ms;
+  --syd-duration-base: 200ms;
+  --syd-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --syd-page: #0D1117;
+    --syd-surface: #151A20;
+    --syd-ink: #E4E8ED;
+    --syd-muted: #A5ABB4;
+    --syd-rule: #33383F;
+    --syd-edge: #646970;
+    --syd-focus: #E4E8ED;
+    --syd-accent-text: #969CA5;
+  }
+}
+:root[data-theme="dark"] {
+  --syd-page: #0D1117;
+  --syd-surface: #151A20;
+  --syd-ink: #E4E8ED;
+  --syd-muted: #A5ABB4;
+  --syd-rule: #33383F;
+  --syd-edge: #646970;
+  --syd-focus: #E4E8ED;
+  --syd-accent-text: #969CA5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --syd-duration-fast: 0ms; --syd-duration-base: 0ms; }
+}
+/* This page's roles on the shared tokens. --scheme tells the canvas code which data palette to use. */
+:root {
+  --scheme: light;
+  --page: var(--syd-page); --surface: var(--syd-surface); --ink: var(--syd-ink); --ink-2: var(--syd-muted);
+  --muted: var(--syd-muted); --grid: var(--syd-rule); --axis: var(--syd-edge); --border: var(--syd-rule);
+  --wash: rgba(31, 36, 43, 0.06); --accent: var(--syd-accent-text);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --scheme: dark; --wash: rgba(228, 232, 237, 0.07); }
+}
+:root[data-theme="dark"] { --scheme: dark; --wash: rgba(228, 232, 237, 0.07); color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--page); color: var(--ink); font: var(--syd-size-small)/var(--syd-leading-text) var(--syd-font-sans);
+  display: flex; flex-direction: column; overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+input[type="checkbox"], input[type="range"] { accent-color: var(--syd-ink); }
+button { background: var(--surface); border: var(--syd-hairline) solid var(--border); border-radius: var(--syd-radius-control);
+  padding: var(--syd-space-1) var(--syd-space-3); cursor: pointer;
+  transition: background-color var(--syd-duration-fast) var(--syd-ease), color var(--syd-duration-fast) var(--syd-ease); }
+button:hover { background: var(--wash); }
+:focus-visible { outline: var(--syd-focus-width) solid var(--syd-focus); outline-offset: 2px; }
+.muted { color: var(--muted); }
+header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-wrap: wrap; }
+header h1 { font: 600 var(--syd-size-proof-long)/var(--syd-leading-title) var(--syd-font-serif); margin: 0; }
+#stats { font-variant-numeric: tabular-nums; }
+.seg { display: inline-flex; border: var(--syd-hairline) solid var(--border); border-radius: var(--syd-radius-control); overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: var(--syd-space-1) var(--syd-space-3); background: transparent; }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button[aria-checked="true"], .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.spacer { flex: 1; }
+.search { position: relative; }
+#q { width: 260px; max-width: 60vw; padding: var(--syd-space-1) var(--syd-space-3); border: var(--syd-hairline) solid var(--border);
+  border-radius: var(--syd-radius-control); background: var(--page); }
+#results { position: absolute; z-index: 20; top: 100%; right: 0; width: 340px; max-width: 90vw; max-height: 60vh; overflow: auto;
+  margin: 4px 0 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--syd-radius-control);
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); }
+#results li button { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 5px 8px; }
+#results li button[aria-selected="true"], #results li button:hover { background: var(--wash); }
+#results .sub { color: var(--ink-2); font-size: 12px; }
+main { flex: 1; display: flex; min-height: 0; position: relative; }
+#side { width: 288px; flex: none; overflow: auto; padding: 12px 16px; border-right: 1px solid var(--border); background: var(--surface); }
+#side h2 { font-size: var(--syd-size-caption); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+#side section:first-child h2 { margin-top: 0; }
+#side label { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+#side label.col { flex-direction: column; align-items: stretch; gap: 2px; }
+#side input[type="range"] { width: 100%; }
+.row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+#legend { list-style: none; margin: 8px 0 0; padding: 0; }
+#legend li label { margin: 0; padding: 2px 0; cursor: pointer; }
+#legend .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+#legend .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#legend .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { font-size: 12px; margin-top: 14px; }
+#stage { flex: 1; position: relative; min-width: 0; background: var(--surface); }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+canvas.dragging { cursor: grabbing; }
+#tip { position: absolute; pointer-events: none; z-index: 5; max-width: 280px; padding: var(--syd-space-2) var(--syd-space-3); border-radius: var(--syd-radius-control);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,.16); font-size: 12px; }
+#tip b { display: block; font-weight: 600; }
+#tip span { color: var(--ink-2); display: block; }
+#table-wrap { position: absolute; inset: 0; overflow: auto; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+td.wrap { white-space: normal; min-width: 180px; }
+th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+th button { border: 0; background: none; padding: 0; font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--wash); }
+#inspector { width: 340px; flex: none; overflow: auto; padding: 14px 16px 24px; border-left: 1px solid var(--border); background: var(--surface); }
+#inspector h2 { font: 600 var(--syd-size-proof-long)/var(--syd-leading-title) var(--syd-font-serif); margin: 0 28px 4px 0; }
+#inspector .close { position: absolute; right: 12px; top: 10px; border: 0; font-size: 18px; padding: 0 6px; background: transparent; }
+#inspector .pos { color: var(--ink-2); margin: 0 0 8px; }
+#inspector h3 { font-size: var(--syd-size-caption); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 16px 0 6px; }
+#inspector dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; }
+#inspector dt { color: var(--muted); }
+#inspector dd { margin: 0; font-variant-numeric: tabular-nums; }
+#inspector blockquote { margin: 6px 0 0; padding: 6px 10px; border-left: 2px solid var(--axis); color: var(--ink-2); white-space: pre-wrap; }
+.badge { display: inline-block; font-size: var(--syd-size-caption); padding: 1px 8px; border-radius: var(--syd-radius-badge); background: var(--wash); border: 1px solid var(--border); margin: 0 4px 4px 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chips button { font-size: var(--syd-size-caption); padding: 2px 8px; border-radius: var(--syd-radius-control); display: inline-flex; align-items: center; gap: 5px; max-width: 100%; }
+.chips .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.chips .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile { display: inline-block; margin-top: 12px; color: var(--accent); text-underline-offset: 2px; }
+.only-narrow { display: none; }
+@media (max-width: 760px) {
+  header { padding: 8px 16px; gap: 8px; }
+  #stats { display: none; }
+  .only-narrow { display: inline-block; }
+  #q { width: 100%; max-width: none; }
+  .search { flex: 1 1 100%; order: 5; }
+  #side { position: absolute; z-index: 15; inset: 0 auto 0 0; width: min(300px, 88vw); box-shadow: 4px 0 24px rgba(0,0,0,.2); }
+  #side:not(.open) { display: none; }
+  #inspector { position: absolute; z-index: 16; left: 0; right: 0; bottom: 0; width: auto; max-height: 55%; border-left: 0;
+    border-top: 1px solid var(--border); box-shadow: 0 -6px 24px rgba(0,0,0,.2); }
+  .seg { max-width: 100%; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<header>
+  <button id="menu-btn" class="only-narrow" aria-label="Show controls" aria-expanded="false" aria-controls="side">☰</button>
+  <h1>Network graph</h1>
+  <span id="stats" class="muted"></span>
+  <div class="seg" role="radiogroup" aria-label="View mode" id="modes">
+    <button role="radio" data-mode="clusters" aria-checked="true">Constellations</button>
+    <button role="radio" data-mode="companies" aria-checked="false">Companies</button>
+    <button role="radio" data-mode="radar" aria-checked="false">Interaction</button>
+    <button role="radio" data-mode="timeline" aria-checked="false">Timeline</button>
+    <button role="radio" data-mode="cohorts" aria-checked="false">Cohorts</button>
+  </div>
+  <button id="table-btn" aria-pressed="false">Table</button>
+  <span class="spacer"></span>
+  <div class="search">
+    <input id="q" type="search" placeholder="Search name, company, role  ( / )" aria-label="Search contacts"
+      autocomplete="off" role="combobox" aria-expanded="false" aria-controls="results">
+    <ul id="results" role="listbox" aria-label="Search results" hidden></ul>
+  </div>
+</header>
+<main>
+  <aside id="side" aria-label="Controls">
+    <section>
+      <h2>Colour by</h2>
+      <div class="seg" role="radiogroup" aria-label="Colour by" id="color-by">
+        <button role="radio" data-color="community" aria-checked="true">Community</button>
+        <button role="radio" data-color="domain" aria-checked="false">Domain</button>
+        <button role="radio" data-color="cohort" aria-checked="false">Cohort</button>
+      </div>
+      <ul id="legend"></ul>
+      <div class="row"><button class="link" id="legend-all">Show all</button><button class="link" id="legend-none">Hide all</button></div>
+    </section>
+    <section>
+      <h2>Filters</h2>
+      <label><input type="checkbox" id="f-dm"> Only contacts with messages</label>
+      <label><input type="checkbox" id="f-ego" checked> Ego hub (you and your ties)</label>
+      <label><input type="checkbox" id="f-colleague" checked> Colleague edges (inferred)</label>
+      <label><input type="checkbox" id="f-role" checked> Similar-role edges (inferred)</label>
+      <label><input type="checkbox" id="f-coactive" checked> Co-active DM edges (inferred)</label>
+      <label class="col">Connected up to <output id="cutoff-out" class="muted"></output>
+        <input type="range" id="cutoff" min="0" max="1000" value="1000" aria-label="Connected up to date"></label>
+      <div class="row"><button id="play">▶ Play growth</button></div>
+    </section>
+    <section>
+      <h2>Physics</h2>
+      <label class="col">Repulsion <input type="range" id="p-charge" min="5" max="150" value="45"></label>
+      <label class="col">Link strength <input type="range" id="p-link" min="0" max="100" value="30"></label>
+      <label class="col">Group gravity <input type="range" id="p-gravity" min="0" max="100" value="40"></label>
+      <div class="row"><button id="reheat">Reheat</button><button id="fit">Fit</button><button id="png">Export PNG</button></div>
+    </section>
+    <section class="note muted" id="note"></section>
+  </aside>
+  <div id="stage">
+    <canvas id="c" role="img" aria-label="Network graph of your connections. Use search, the legend or the Table view to explore."></canvas>
+    <div id="tip" hidden></div>
+    <div id="table-wrap" hidden></div>
+  </div>
+  <aside id="inspector" aria-live="polite" aria-label="Contact details" hidden></aside>
+</main>
+<script type="application/json" id="graph-data">__GRAPH_DATA__</script>
+<script>
+"use strict";
+const DATA = JSON.parse(document.getElementById("graph-data").textContent);
+const PALETTE = {
+  light: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"],
+  dark: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#0ca30c", "#9085e9", "#e66767"],
+};
+const $ = (id) => document.getElementById(id);
+const canvas = $("c"), ctx = canvas.getContext("2d"), stage = $("stage");
+const ME = "__me";
+
+// ---------- data ----------
+const nodes = DATA.nodes.map((d) => ({ ...d, x: 0, y: 0, vx: 0, vy: 0, fx: null, fy: null,
+  dmTotal: d.dm.sent + d.dm.recv, t: d.connected ? Date.parse(d.connected) : null }));
+const byId = new Map(nodes.map((n) => [n.id, n]));
+const me = { id: ME, name: "You", isMe: true, x: 0, y: 0 };
+const edges = DATA.edges.map((e) => ({ ...e, a: byId.get(e.s), b: byId.get(e.t) })).filter((e) => e.a && e.b);
+const orgName = new Map(DATA.orgs.map((o) => [o.id, o.name]));
+const commLabel = new Map(DATA.communities.map((c) => [c.id, c.label]));
+const COHORTS = DATA.cohorts || [], REGIMES = DATA.regimes || [];
+const cohortLabel = new Map(COHORTS.map((c) => [c.id, c.label]));
+const adj = new Map(nodes.map((n) => [n.id, { colleague: [], role: [], coactive: [] }]));
+for (const e of edges) { adj.get(e.s)[e.kind].push(e.b); adj.get(e.t)[e.kind].push(e.a); }
+const fold = (s) => (s || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+for (const n of nodes) n.hay = fold(`${n.name} ${n.position} ${n.company}`);
+const maxWarmth = Math.max(1e-9, ...nodes.map((n) => n.warmth));
+const maxPr = Math.max(1e-9, ...nodes.map((n) => n.pagerank));
+const rank = (key) => { const m = new Map(); [...nodes].sort((a, b) => b[key] - a[key]).forEach((n, i) => m.set(n.id, i + 1)); return m; };
+const prRank = rank("pagerank"), btRank = rank("betweenness");
+const dated = nodes.filter((n) => n.t !== null).map((n) => n.t);
+const tMin = dated.length ? Math.min(...dated) : 0, tMax = dated.length ? Math.max(...dated) : 1;
+
+// Categories: colour slots are assigned once, from the full data, by size. Filters never repaint.
+function buildCategories(kind) {
+  const counts = new Map();
+  for (const n of nodes) { const k = rawKey(kind, n); counts.set(k, (counts.get(k) || 0) + 1); }
+  const numeric = kind !== "domain", special = numeric ? [-1] : ["Other", "Unknown"];
+  const ranked = [...counts.entries()].filter(([k]) => !special.includes(k)).sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+  const cats = [], slotOf = new Map();
+  const labelOf = (k) => kind === "community" ? commLabel.get(k) || `Group ${k + 1}` : kind === "cohort" ? cohortLabel.get(k) || `Cohort ${k + 1}` : k;
+  ranked.slice(0, 8).forEach(([k, c], i) => { slotOf.set(k, i); cats.push({ key: String(k), slot: i, count: c, label: labelOf(k) }); });
+  const rest = ranked.slice(8).reduce((s, [, c]) => s + c, 0) + (kind === "domain" ? (counts.get("Other") || 0) : 0);
+  if (rest) cats.push({ key: "other", slot: -1, count: rest, label: { community: "Smaller groups", domain: "Other", cohort: "Smaller cohorts" }[kind] });
+  const tail = numeric ? counts.get(-1) : counts.get("Unknown");
+  if (tail) cats.push({ key: "none", slot: -2, count: tail, label: { community: "No inferred ties", domain: "Unknown", cohort: "Not in a burst" }[kind] });
+  return { cats, slotOf };
+}
+function rawKey(kind, n) { return kind === "community" ? n.community : kind === "cohort" ? n.cohort : n.domain; }
+const CATS = { community: buildCategories("community"), domain: buildCategories("domain"), cohort: buildCategories("cohort") };
+function catKey(n, kind = state.colorBy) {
+  const k = rawKey(kind, n), { slotOf } = CATS[kind];
+  if (slotOf.has(k)) return String(k);
+  if (kind === "domain" ? k === "Unknown" : k === -1) return "none";
+  return "other";
+}
+
+// ---------- state ----------
+const state = { mode: "clusters", colorBy: "community", hidden: { community: new Set(), domain: new Set(), cohort: new Set() },
+  onlyDm: false, ego: true, colleague: true, role: true, coactive: true, cutoff: Infinity,
+  charge: 45, link: 0.3, gravity: 0.4, selected: null, hover: null, legendHover: null, matches: null, table: false };
+let theme = {}, visible = [], visEdges = [];
+const timeAxis = () => state.mode === "timeline" || state.mode === "cohorts";
+const cam = { x: 0, y: 0, k: 1 }; let camGoal = null, pendingFit = true, W = 0, H = 0, dpr = 1;
+let alpha = 1, alphaTarget = 0, dirty = true;
+const ALPHA_MIN = 0.003, ALPHA_DECAY = 1 - Math.pow(ALPHA_MIN, 1 / 320), VEL_DECAY = 0.55;
+
+function readTheme() {
+  const cs = getComputedStyle(document.documentElement), v = (n) => cs.getPropertyValue(n).trim();
+  const dark = v("--scheme") === "dark";
+  theme = { surface: v("--surface"), ink: v("--ink"), ink2: v("--ink-2"), muted: v("--muted"), grid: v("--grid"),
+    axis: v("--axis"), series: dark ? PALETTE.dark : PALETTE.light, other: v("--syd-edge"), none: v("--syd-rule"),
+    font: v("--syd-font-sans") || "system-ui, sans-serif" };
+  dirty = true;
+}
+function colorOf(n) {
+  if (n.isMe) return theme.ink;
+  const k = catKey(n), cat = CATS[state.colorBy].cats.find((c) => c.key === k);
+  if (!cat || cat.slot === -1) return theme.other;
+  if (cat.slot === -2) return theme.none;
+  return theme.series[cat.slot];
+}
+const colorCache = new Map();
+function nodeColor(n) { if (!colorCache.has(n.id)) colorCache.set(n.id, colorOf(n)); return colorCache.get(n.id); }
+
+function radius(n) {
+  if (state.mode === "radar") return 3 + 2 * Math.sqrt(n.dmTotal);
+  return 3 + 8 * Math.sqrt(n.pagerank / maxPr);
+}
+
+// ---------- visibility ----------
+function applyFilters() {
+  const hidden = state.hidden[state.colorBy];
+  visible = nodes.filter((n) => !hidden.has(catKey(n)) && (!state.onlyDm || n.dmTotal > 0) &&
+    (n.t === null || n.t <= state.cutoff));
+  const vis = new Set(visible.map((n) => n.id));
+  visEdges = edges.filter((e) => vis.has(e.s) && vis.has(e.t) && state[e.kind]);
+  for (const n of nodes) n.deg = 0;
+  for (const e of visEdges) { e.a.deg++; e.b.deg++; }
+  for (const n of visible) n.r = radius(n);
+  if (state.selected && !state.selected.isMe && !vis.has(state.selected.id)) select(null);
+  $("stats").textContent = `${visible.length} of ${nodes.length} contacts · ${visEdges.length} inferred ties · as of ${DATA.meta.as_of || "—"}`;
+  computeTargets();
+  if (state.table) renderTable();
+  dirty = true;
+}
+
+// ---------- layout targets per view mode ----------
+let guides = { rings: [], hubs: [], years: [], lanes: [], regimes: [] };
+function hashAngle(id) { let h = 2166136261; for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) / 4294967296) * Math.PI * 2; }
+function computeTargets() {
+  const N = Math.max(visible.length, 1), R = Math.max(220, Math.sqrt(N) * 22);
+  guides = { rings: [], hubs: [], years: [], lanes: [], regimes: [] };
+  for (const n of nodes) { n.g = state.gravity; n.gy = null; n.radial = null; n.tx = undefined; n.ty = undefined; n.lane = null; }
+  if (state.mode === "clusters") {
+    const groups = new Map();
+    for (const n of visible) { const k = rawKey(state.colorBy, n);
+      if (catKey(n) === "none") continue; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(n); }
+    const list = [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+    const total = list.reduce((s, [, m]) => s + m.length, 0) || 1; let acc = 0;
+    for (const [, members] of list) {
+      const a = ((acc + members.length / 2) / total) * Math.PI * 2; acc += members.length;
+      const rr = R * (members.length > total * 0.25 ? 0.55 : 1);
+      for (const n of members) { n.tx = Math.cos(a) * rr; n.ty = Math.sin(a) * rr; }
+    }
+    for (const n of visible) if (n.tx === undefined) {
+      const a = hashAngle(n.id); n.tx = Math.cos(a) * R * 1.55; n.ty = Math.sin(a) * R * 1.55; n.g = state.gravity * 0.5; }
+  } else if (state.mode === "companies") {
+    const sizes = new Map();
+    for (const n of visible) if (n.org) sizes.set(n.org, (sizes.get(n.org) || 0) + 1);
+    const hubs = [...sizes.entries()].filter(([, c]) => c > 1).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    // Area-proportional sunflower: a hub's distance grows with the members already placed.
+    const golden = Math.PI * (3 - Math.sqrt(5)); let maxR = 0, placed = 0; const pos = new Map();
+    hubs.forEach(([org, c], i) => { const r = 22 * Math.sqrt(placed + c / 2) + (i ? 30 : 0), a = i * golden; placed += c;
+      pos.set(org, [Math.cos(a) * r, Math.sin(a) * r]); maxR = Math.max(maxR, r);
+      guides.hubs.push({ org, label: `${orgName.get(org) || org} · ${c}`, x: Math.cos(a) * r, y: Math.sin(a) * r, size: c }); });
+    const outer = maxR + 140 + Math.sqrt(N) * 6;
+    for (const n of visible) {
+      if (n.org && pos.has(n.org)) { [n.tx, n.ty] = pos.get(n.org); n.g = Math.max(state.gravity, 0.15) * 1.6; }
+      else { const a = hashAngle(n.id); n.tx = Math.cos(a) * outer; n.ty = Math.sin(a) * outer; n.g = state.gravity * 0.4; }
+    }
+    guides.rings.push({ r: outer, label: "No shared company in your network" });
+  } else if (state.mode === "radar") {
+    const inner = 70, span = R * 1.2;
+    for (const n of visible) { const w = n.warmth / maxWarmth;
+      n.radial = n.warmth > 0 ? inner + (1 - w) * span : inner + span + 60; n.g = Math.max(state.gravity, 0.2); }
+    [0.25, 0.5, 0.75].forEach((f) => guides.rings.push({ r: inner + (1 - f) * span, label: `warmth ${(f * maxWarmth).toFixed(1)}` }));
+    guides.rings.push({ r: inner + span + 60, label: "No messages, note or shared employer" });
+  } else if (state.mode === "timeline" || state.mode === "cohorts") {
+    const width = Math.max(1200, N * 4), x0 = -width / 2;
+    const scale = (t) => x0 + ((t - tMin) / Math.max(1, tMax - tMin)) * width;
+    // Swimlanes, height by visible count: one per colour category, or one per burst in date order.
+    const byCohort = state.mode === "cohorts";
+    const laneKey = byCohort ? (n) => (n.cohort >= 0 ? String(n.cohort) : "none") : (n) => catKey(n);
+    const lanes = byCohort
+      ? [...[...COHORTS].sort((a, b) => a.start.localeCompare(b.start)).map((c) => ({ key: String(c.id), label: c.label })),
+         { key: "none", label: "Not in a burst" }]
+      : CATS[state.colorBy].cats;
+    const counts = new Map(); for (const n of visible) counts.set(laneKey(n), (counts.get(laneKey(n)) || 0) + 1);
+    const laneY = new Map(); let y = 0;
+    for (const c of lanes) { const cnt = counts.get(c.key); if (!cnt) continue;
+      const h = 36 + cnt * 1.4; laneY.set(c.key, y + h / 2); guides.lanes.push({ label: c.label, y0: y, y1: y + h }); y += h; }
+    for (const l of guides.lanes) { l.y0 -= y / 2; l.y1 -= y / 2; }
+    const laneOf = new Map(lanes.filter((c) => laneY.has(c.key)).map((c, i) => [c.key, guides.lanes[i]]));
+    for (const n of visible) {
+      n.lane = laneOf.get(laneKey(n)) || null;  // repulsion must not push a point into another lane
+      const spread = n.lane ? (hashAngle(n.id + "y") / (Math.PI * 2) - 0.5) * (n.lane.y1 - n.lane.y0 - 24) : 0;
+      n.tx = n.t === null ? x0 - 90 : scale(n.t); n.ty = (n.lane ? (n.lane.y0 + n.lane.y1) / 2 : 0) + spread; n.g = 0.6; n.gy = 2;
+    }
+    const y0 = new Date(tMin).getUTCFullYear(), y1 = new Date(tMax).getUTCFullYear();
+    for (let y = y0; y <= y1 + 1; y++) { const t = Date.UTC(y, 0, 1); if (t >= tMin - 1 && t <= tMax) guides.years.push({ x: scale(t), label: String(y) }); }
+    // Regime changes of the weekly connection rate (CUSUM changepoints).
+    REGIMES.slice(1).forEach((r, i) => guides.regimes.push({ x: scale(Date.parse(r.start)), label: `${REGIMES[i].per_week}/wk → ${r.per_week}/wk` }));
+  }
+}
+function seedPositions() {
+  for (const n of nodes) { const tx = n.tx ?? 0, ty = n.ty ?? 0, a = hashAngle(n.id + "s");
+    const r0 = n.radial ?? 0; const bx = n.radial !== null && n.radial !== undefined ? Math.cos(hashAngle(n.id)) * r0 : tx;
+    const by = n.radial !== null && n.radial !== undefined ? Math.sin(hashAngle(n.id)) * r0 : ty;
+    n.x = bx + Math.cos(a) * 30; n.y = by + Math.sin(a) * 30; }
+}
+
+// ---------- simulation ----------
+function tick() {
+  alpha += (alphaTarget - alpha) * ALPHA_DECAY;
+  const ns = visible, n = ns.length, k = state.charge * (timeAxis() ? 0.6 : 3), maxD2 = 500 * 500;  // on a time axis only overlaps need pushing apart
+  for (let i = 0; i < n; i++) {
+    const a = ns[i];
+    for (let j = i + 1; j < n; j++) {
+      const b = ns[j]; let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
+      if (d2 > maxD2) continue;
+      if (d2 < 0.01) { dx = (Math.random() - 0.5); dy = (Math.random() - 0.5); d2 = dx * dx + dy * dy; }
+      const f = (k * alpha) / Math.max(d2, 4); a.vx -= dx * f; a.vy -= dy * f; b.vx += dx * f; b.vy += dy * f;
+      const minD = a.r + b.r + 2;
+      if (d2 < minD * minD) { const d = Math.sqrt(d2), push = ((minD - d) / d) * 0.5; a.x -= dx * push; a.y -= dy * push; b.x += dx * push; b.y += dy * push; }
+    }
+  }
+  if (state.mode !== "radar" && !timeAxis()) {
+    for (const e of visEdges) {
+      const a = e.a, b = e.b, L = e.kind === "colleague" ? 26 : 46;
+      let dx = b.x + b.vx - a.x - a.vx, dy = b.y + b.vy - a.y - a.vy; const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const s = (state.link * (e.kind === "colleague" ? 1 : e.w)) / Math.max(1, Math.min(a.deg, b.deg));
+      const l = ((d - L) / d) * alpha * s; dx *= l; dy *= l; b.vx -= dx * 0.5; b.vy -= dy * 0.5; a.vx += dx * 0.5; a.vy += dy * 0.5;
+    }
+  }
+  for (const nd of ns) {
+    if (nd.radial !== null && nd.radial !== undefined) {
+      const d = Math.hypot(nd.x, nd.y) || 1, f = ((nd.radial - d) / d) * nd.g * alpha;
+      nd.vx += nd.x * f; nd.vy += nd.y * f;
+    } else {
+      nd.vx += (nd.tx - nd.x) * nd.g * alpha * 0.25;
+      nd.vy += (nd.ty - nd.y) * (nd.gy ?? nd.g) * alpha * 0.25;
+    }
+    if (nd.fx !== null) { nd.x = nd.fx; nd.y = nd.fy; nd.vx = nd.vy = 0; continue; }
+    nd.vx *= VEL_DECAY; nd.vy *= VEL_DECAY;
+    const sp = Math.hypot(nd.vx, nd.vy); if (sp > 40) { nd.vx *= 40 / sp; nd.vy *= 40 / sp; }
+    nd.x += nd.vx; nd.y += nd.vy;
+    if (nd.lane) nd.y = Math.min(Math.max(nd.y, nd.lane.y0 + nd.r + 2), nd.lane.y1 - nd.r - 2);
+  }
+}
+function reheat(a = 0.7) { alpha = Math.max(alpha, a); dirty = true; }
+
+// ---------- camera ----------
+function resize() {
+  dpr = window.devicePixelRatio || 1; const r = stage.getBoundingClientRect();
+  if (W && H) for (const c of [cam, camGoal]) if (c) { c.x += (r.width - W) / 2; c.y += (r.height - H) / 2; }  // keep the view centred when panes open
+  W = r.width; H = r.height;
+  canvas.width = Math.max(1, Math.round(W * dpr)); canvas.height = Math.max(1, Math.round(H * dpr)); dirty = true;
+}
+function bounds(list) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of list) { x0 = Math.min(x0, n.x - (n.r || 4)); y0 = Math.min(y0, n.y - (n.r || 4)); x1 = Math.max(x1, n.x + (n.r || 4)); y1 = Math.max(y1, n.y + (n.r || 4)); }
+  return isFinite(x0) ? { x0, y0, x1, y1 } : { x0: -100, y0: -100, x1: 100, y1: 100 };
+}
+function fit(animate = true) {
+  const list = state.ego && !timeAxis() ? [...visible, me] : visible, b = bounds(list), pad = 50;
+  for (const g of guides.rings) { b.x0 = Math.min(b.x0, -g.r); b.x1 = Math.max(b.x1, g.r); b.y0 = Math.min(b.y0, -g.r); b.y1 = Math.max(b.y1, g.r); }
+  const k = Math.min(4, Math.max(0.05, Math.min((W - pad * 2) / (b.x1 - b.x0 || 1), (H - pad * 2) / (b.y1 - b.y0 || 1))));
+  const goal = { k, x: W / 2 - ((b.x0 + b.x1) / 2) * k, y: H / 2 - ((b.y0 + b.y1) / 2) * k };
+  if (animate) camGoal = goal; else Object.assign(cam, goal);
+  dirty = true;
+}
+// Next frame, after an opening inspector has resized the canvas.
+function centerOn(n) { requestAnimationFrame(() => { const k = Math.max(cam.k, 1.6); camGoal = { k, x: W / 2 - n.x * k, y: H / 2 - n.y * k }; }); }
+const toWorld = (sx, sy) => [(sx - cam.x) / cam.k, (sy - cam.y) / cam.k];
+
+// ---------- drawing ----------
+function isDim(n) {
+  if (state.legendHover !== null) return catKey(n) !== state.legendHover;
+  if (state.selected) return !(n === state.selected || neighborSet.has(n.id));
+  if (state.matches) return !state.matches.has(n.id);
+  return false;
+}
+let neighborSet = new Set();
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = theme.surface; ctx.fillRect(0, 0, W, H);
+  ctx.setTransform(dpr * cam.k, 0, 0, dpr * cam.k, dpr * cam.x, dpr * cam.y);
+  const px = 1 / cam.k;
+  // guides
+  ctx.lineWidth = px; ctx.strokeStyle = theme.grid; ctx.fillStyle = theme.muted; ctx.font = `${12 * px}px ${theme.font}`;
+  for (const g of guides.rings) { ctx.beginPath(); ctx.arc(0, 0, g.r, 0, Math.PI * 2); ctx.stroke(); ctx.fillText(g.label, 6 * px, -g.r - 4 * px); }
+  if (guides.years.length) {
+    const top = -cam.y / cam.k, bottom = (H - cam.y) / cam.k;
+    for (const y of guides.years) { ctx.beginPath(); ctx.moveTo(y.x, top); ctx.lineTo(y.x, bottom); ctx.stroke(); }
+    const left = -cam.x / cam.k, right = (W - cam.x) / cam.k;
+    for (const l of guides.lanes.slice(1)) { ctx.beginPath(); ctx.moveTo(left, l.y0); ctx.lineTo(right, l.y0); ctx.stroke(); }
+    ctx.setLineDash([6 * px, 5 * px]); ctx.strokeStyle = theme.muted;
+    for (const r of guides.regimes) { ctx.beginPath(); ctx.moveTo(r.x, top); ctx.lineTo(r.x, bottom); ctx.stroke(); }
+    ctx.setLineDash([]); ctx.strokeStyle = theme.grid;
+  }
+  // ego spokes
+  const showMe = state.ego && !timeAxis();
+  if (showMe) {
+    for (const n of visible) {
+      const strong = n.dmTotal > 0; if (!strong && state.mode !== "radar" && !(state.selected === me)) { continue; }
+      ctx.globalAlpha = isDim(n) && state.selected !== me ? 0.05 : strong ? 0.35 : 0.08;
+      ctx.strokeStyle = theme.ink2; ctx.lineWidth = (strong ? 0.6 + Math.log1p(n.dmTotal) * 0.6 : 0.5) * px;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(n.x, n.y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  // inferred edges: everywhere in the two structural views, only the selection's in the other two
+  const sel = state.selected, structural = state.mode === "clusters" || state.mode === "companies";
+  for (const e of visEdges) {
+    const hot = sel && (e.a === sel || e.b === sel);
+    if (!structural && !hot && e.kind !== "coactive") continue;
+    const dim = (sel && !hot) || (state.legendHover !== null && (isDim(e.a) || isDim(e.b))) || (!sel && state.matches && (isDim(e.a) && isDim(e.b)));
+    ctx.globalAlpha = hot ? 0.9 : dim ? 0.04 : e.kind === "colleague" ? 0.32 : 0.16;
+    ctx.strokeStyle = hot ? theme.ink : theme.ink2; ctx.lineWidth = (hot ? 1.4 : 0.8) * px;
+    if (e.kind === "coactive") { ctx.setLineDash([4 * px, 3 * px]); if (!dim) ctx.globalAlpha = Math.max(ctx.globalAlpha, 0.6); }
+    ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.globalAlpha = 1;
+  // nodes
+  ctx.lineWidth = 1.5 * px; ctx.strokeStyle = theme.surface;
+  for (const n of visible) {
+    ctx.globalAlpha = isDim(n) ? 0.14 : 1; ctx.fillStyle = nodeColor(n);
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  if (sel && !sel.isMe) { ctx.lineWidth = 2 * px; ctx.strokeStyle = theme.ink; ctx.beginPath(); ctx.arc(sel.x, sel.y, sel.r + 3 * px, 0, Math.PI * 2); ctx.stroke(); }
+  if (showMe) { ctx.fillStyle = theme.ink; ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 2 * px; ctx.strokeStyle = theme.surface; ctx.stroke(); }
+  drawLabels(showMe);
+}
+function drawLabels(showMe) {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const placed = [], font = `12px ${theme.font}`;
+  ctx.font = font; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  const clip = (s, m = 30) => (s.length > m ? s.slice(0, m - 1) + "…" : s);
+  const tryLabel = (text, sx, sy, weight = 400, color = theme.ink) => {
+    ctx.font = `${weight} ${font}`; const w = ctx.measureText(text).width, h = 15;
+    const box = { x0: sx, y0: sy - h / 2, x1: sx + w, y1: sy + h / 2 };
+    if (box.x1 < 0 || box.x0 > W || box.y1 < 0 || box.y0 > H) return;
+    for (const p of placed) if (box.x0 < p.x1 + 2 && box.x1 > p.x0 - 2 && box.y0 < p.y1 && box.y1 > p.y0) return;
+    placed.push(box); ctx.lineWidth = 3; ctx.strokeStyle = theme.surface; ctx.strokeText(text, sx, sy);
+    ctx.fillStyle = color; ctx.fillText(text, sx, sy);
+  };
+  const sp = (n) => [n.x * cam.k + cam.x, n.y * cam.k + cam.y];
+  const nodeLabel = (n, weight) => { const [x, y] = sp(n); tryLabel(clip(n.name), x + n.r * cam.k + 4, y, weight); };
+  for (const y of guides.years) { const x = y.x * cam.k + cam.x; ctx.font = `600 ${font}`;
+    tryLabel(y.label, x + 4, 14, 600, theme.muted); }
+  for (const r of guides.regimes) tryLabel(r.label, r.x * cam.k + cam.x + 4, 32, 400, theme.muted);
+  for (const l of guides.lanes) tryLabel(clip(l.label, 46), 8, l.y0 * cam.k + cam.y + 10, 600, theme.muted);
+  if (showMe) { const [x, y] = sp(me); tryLabel("You", x + 13, y, 600); }
+  if (state.selected && !state.selected.isMe) nodeLabel(state.selected, 600);
+  if (state.hover && !state.hover.isMe) nodeLabel(state.hover, 600);
+  if (state.mode === "companies") {
+    for (const h of guides.hubs) { const x = h.x * cam.k + cam.x, y = (h.y - Math.sqrt(h.size) * 13) * cam.k + cam.y - 8;
+      ctx.font = `600 ${font}`; const w = ctx.measureText(clip(h.label, 34)).width; tryLabel(clip(h.label, 34), x - w / 2, y, 600, theme.ink2); }
+  }
+  if (state.matches && state.matches.size <= 40) for (const n of visible) if (state.matches.has(n.id)) nodeLabel(n, 400);
+  if (state.selected) for (const n of visible) if (neighborSet.has(n.id)) nodeLabel(n, 400);
+  const quota = cam.k >= 1.5 ? 60 : cam.k >= 0.9 ? 20 : 10;
+  const top = visible.filter((n) => !isDim(n)).sort((a, b) => (state.mode === "radar" ? b.warmth - a.warmth : b.pagerank - a.pagerank)).slice(0, quota);
+  for (const n of top) nodeLabel(n, 400);
+}
+
+// ---------- hit testing & pointer ----------
+function hit(sx, sy) {
+  const [wx, wy] = toWorld(sx, sy); let best = null, bd = Infinity;
+  if (state.ego && !timeAxis()) { const d = Math.hypot(wx, wy); if (d < 11 + 4 / cam.k) { best = me; bd = d; } }
+  for (const n of visible) { const d = Math.hypot(n.x - wx, n.y - wy); if (d < n.r + 4 / cam.k && d < bd) { best = n; bd = d; } }
+  return best;
+}
+const pointers = new Map(); let drag = null, pinch = null;
+canvas.addEventListener("pointerdown", (ev) => {
+  canvas.setPointerCapture(ev.pointerId); pointers.set(ev.pointerId, [ev.offsetX, ev.offsetY]); camGoal = null;
+  if (pointers.size === 2) {  // a second finger turns any drag into a pinch: release the dragged node first
+    if (drag && drag.node) { drag.node.fx = drag.node.fy = null; alphaTarget = 0; }
+    drag = null; canvas.classList.remove("dragging");
+    const [p, q] = [...pointers.values()]; pinch = { d: Math.hypot(p[0] - q[0], p[1] - q[1]), k: cam.k, cx: (p[0] + q[0]) / 2, cy: (p[1] + q[1]) / 2, cam: { ...cam } }; return; }
+  const n = hit(ev.offsetX, ev.offsetY);
+  drag = { node: n && !n.isMe ? n : null, target: n, sx: ev.offsetX, sy: ev.offsetY, cam: { ...cam }, moved: false };
+  canvas.classList.add("dragging");
+});
+canvas.addEventListener("pointermove", (ev) => {
+  if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, [ev.offsetX, ev.offsetY]);
+  if (pinch && pointers.size === 2) {
+    const [p, q] = [...pointers.values()], d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+    const k = Math.min(8, Math.max(0.05, pinch.k * (d / pinch.d)));
+    cam.k = k; cam.x = pinch.cx - ((pinch.cx - pinch.cam.x) / pinch.k) * k; cam.y = pinch.cy - ((pinch.cy - pinch.cam.y) / pinch.k) * k; dirty = true; return;
+  }
+  if (drag) {
+    const dx = ev.offsetX - drag.sx, dy = ev.offsetY - drag.sy;
+    if (!drag.moved && Math.hypot(dx, dy) > 3) { drag.moved = true; if (drag.node) { alphaTarget = 0.25; reheat(0.25); } }
+    if (!drag.moved) return;
+    if (drag.node) { const [wx, wy] = toWorld(ev.offsetX, ev.offsetY); drag.node.fx = wx; drag.node.fy = wy; }
+    else { cam.x = drag.cam.x + dx; cam.y = drag.cam.y + dy; }
+    dirty = true; return;
+  }
+  const n = hit(ev.offsetX, ev.offsetY);
+  if (n !== state.hover) { state.hover = n; dirty = true; showTip(n, ev.offsetX, ev.offsetY); }
+  else if (n) moveTip(ev.offsetX, ev.offsetY);
+});
+function endPointer(ev) {
+  pointers.delete(ev.pointerId);
+  if (pinch) { if (pointers.size < 2) pinch = null; return; }
+  if (!drag) return;
+  if (!drag.moved) select(drag.target && drag.target === state.selected ? null : drag.target);
+  if (drag.node) { drag.node.fx = drag.node.fy = null; alphaTarget = 0; }
+  drag = null; canvas.classList.remove("dragging");
+}
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("pointerleave", () => { if (!drag && state.hover) { state.hover = null; showTip(null); dirty = true; } });
+canvas.addEventListener("wheel", (ev) => {
+  ev.preventDefault(); camGoal = null;
+  const k = Math.min(8, Math.max(0.05, cam.k * Math.exp(-ev.deltaY * 0.0015)));
+  cam.x = ev.offsetX - ((ev.offsetX - cam.x) / cam.k) * k; cam.y = ev.offsetY - ((ev.offsetY - cam.y) / cam.k) * k; cam.k = k; dirty = true;
+}, { passive: false });
+
+const tip = $("tip");
+function showTip(n, x, y) {
+  if (!n) { tip.hidden = true; return; }
+  tip.replaceChildren(el("b", {}, n.name), ...(n.isMe ? [el("span", {}, `${visible.length} contacts shown`)] : [
+    el("span", {}, [n.position, n.company].filter(Boolean).join(" · ") || "No position listed"),
+    ...(n.dmTotal ? [el("span", {}, `${n.dmTotal} messages · last ${n.dm.last || "—"}`)] : []),
+    ...(state.mode === "cohorts" && n.cohort >= 0 ? [el("span", {}, cohortLabel.get(n.cohort))] : [])]));
+  tip.hidden = false; moveTip(x, y);
+}
+function moveTip(x, y) { const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = `${Math.min(x + 14, W - w - 8)}px`; tip.style.top = `${y + 14 + h > H ? y - h - 10 : y + 14}px`; }
+
+// ---------- DOM helpers ----------
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) { if (k === "on") for (const [ev, f] of Object.entries(v)) e.addEventListener(ev, f); else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v); }
+  for (const k of kids.flat()) if (k !== null && k !== undefined && k !== false) e.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  return e;
+}
+const safeProfile = (u) => /^https:\/\/([a-z]+\.)?linkedin\.com\/in\//i.test(u || "") ? u : null;
+const fmtMonth = (s) => (s ? s.slice(0, 7) : "now");
+const fmtHours = (h) => (h < 48 ? `${h} h` : `${Math.round(h / 24)} days`);
+
+// ---------- selection & inspector ----------
+function select(n) {
+  state.selected = n; neighborSet = new Set();
+  if (n && !n.isMe) { const a = adj.get(n.id); for (const m of [...a.colleague, ...a.role, ...a.coactive]) neighborSet.add(m.id); }
+  if (n && n.isMe) for (const m of visible) if (m.dmTotal > 0) neighborSet.add(m.id);
+  renderInspector(); dirty = true;
+}
+function chip(n) {
+  return el("button", { type: "button", title: [n.position, n.company].filter(Boolean).join(" · "), on: { click: () => { select(n); centerOn(n); } } },
+    el("span", { class: "dot", style: `background:${nodeColor(n)}` }), el("span", { class: "t" }, n.name));
+}
+function chipList(title, list, limit = 24) {
+  if (!list.length) return [];
+  const sorted = [...list].sort((a, b) => b.warmth - a.warmth || a.name.localeCompare(b.name));
+  return [el("h3", {}, `${title} (${list.length})`), el("div", { class: "chips" }, sorted.slice(0, limit).map(chip),
+    list.length > limit ? el("span", { class: "muted" }, `+${list.length - limit} more`) : null)];
+}
+function renderInspector() {
+  const box = $("inspector"), n = state.selected;
+  if (!n) { box.hidden = true; box.replaceChildren(); resizeSoon(); return; }
+  const close = el("button", { class: "close", "aria-label": "Close details", on: { click: () => select(null) } }, "×");
+  if (n.isMe) {
+    const warm = visible.filter((m) => m.warmth > 0).sort((a, b) => b.warmth - a.warmth);
+    box.replaceChildren(close, el("h2", {}, "You"),
+      el("p", { class: "pos" }, `${visible.length} contacts shown · ${visible.filter((m) => m.dmTotal).length} with messages`),
+      el("h3", {}, "Your positions"), el("dl", {}, (DATA.owner.positions || []).flatMap((p) => [el("dt", {}, `${fmtMonth(p.from)} → ${fmtMonth(p.to)}`), el("dd", {}, p.org)])),
+      ...chipList("Warmest ties", warm, 30));
+  } else {
+    const a = adj.get(n.id), same = n.community >= 0 ? visible.filter((m) => m !== n && m.community === n.community) : [];
+    const badges = [];
+    if (n.stage) badges.push(el("span", { class: "badge" }, `Your colleague at ${n.stage.org} · ${fmtMonth(n.stage.from)} → ${fmtMonth(n.stage.to)}`));
+    if (n.followed) badges.push(el("span", { class: "badge" }, "Company you follow"));
+    const dl = [["Connected", n.connected || "—"],
+      ["Messages", n.dmTotal ? `${n.dm.sent} sent · ${n.dm.recv} received` : "none"],
+      ...(n.dmTotal ? [["Thread", `${n.dm.first || "—"} → ${n.dm.last || "—"}`]] : []),
+      ...(n.conv ? [["Conversations", `${n.conv.n} · they started ${n.conv.by_them}`],
+        ["Their reply", n.conv.reply_h === null ? "never replied" : `median ${fmtHours(n.conv.reply_h)}`],
+        ...(n.conv.my_reply_h === null ? [] : [["Your reply", `median ${fmtHours(n.conv.my_reply_h)}`]])] : []),
+      ["Warmth", `${n.warmth.toFixed(2)}`]];
+    const inv = n.invite ? [el("h3", {}, "Invitation"), el("p", { style: "margin:0" },
+      `${n.invite.dir === "out" ? "You invited them" : "They invited you"}${n.invite.date ? ` on ${n.invite.date}` : ""}`),
+      ...(n.invite.note ? [el("blockquote", {}, n.invite.note)] : [])] : [];
+    const url = safeProfile(n.url);
+    box.replaceChildren(close, el("h2", {}, n.name), el("p", { class: "pos" }, [n.position, n.company].filter(Boolean).join(" · ") || "No position listed"),
+      el("div", {}, badges),
+      el("dl", {}, dl.flatMap(([k, v]) => [el("dt", {}, k), el("dd", { title: k === "Warmth" ? DATA.meta.warmth_formula : null }, v)])),
+      ...inv,
+      el("h3", {}, "In the graph"),
+      el("dl", {}, [["Community", n.community >= 0 ? commLabel.get(n.community) : "none (no inferred ties)"], ["Domain", n.domain],
+        ["Joined in", n.cohort >= 0 ? cohortLabel.get(n.cohort) : "no burst (steady rate)"],
+        ["Inferred ties", `${a.colleague.length} colleague · ${a.role.length} similar role${a.coactive.length ? ` · ${a.coactive.length} co-active` : ""}`],
+        ["PageRank", `#${prRank.get(n.id)} of ${nodes.length}`], ["Bridging", `#${btRank.get(n.id)} of ${nodes.length} (betweenness)`]]
+        .flatMap(([k, v]) => [el("dt", {}, k), el("dd", {}, v)])),
+      ...(url ? [el("a", { class: "profile", href: url, target: "_blank", rel: "noopener noreferrer" }, "Open LinkedIn profile ↗")] : []),
+      ...chipList("Colleagues (same company)", a.colleague), ...chipList("Similar roles", a.role), ...chipList("Messaged in the same weeks", a.coactive), ...chipList("Same community", same, 16));
+  }
+  box.hidden = false; resizeSoon();
+}
+function resizeSoon() { requestAnimationFrame(() => { resize(); }); }
+
+// ---------- legend ----------
+function renderLegend() {
+  const { cats } = CATS[state.colorBy], hidden = state.hidden[state.colorBy];
+  colorCache.clear();
+  $("legend").replaceChildren(...cats.map((c) => {
+    const sw = el("span", { class: "sw", style: `background:${c.slot >= 0 ? theme.series[c.slot] : c.slot === -1 ? theme.other : theme.none}` });
+    const cb = el("input", { type: "checkbox", on: { change: (e) => { if (e.target.checked) hidden.delete(c.key); else hidden.add(c.key); applyFilters(); reheat(0.4); } } });
+    cb.checked = !hidden.has(c.key);
+    return el("li", { on: { mouseenter: () => { state.legendHover = c.key; dirty = true; }, mouseleave: () => { state.legendHover = null; dirty = true; } } },
+      el("label", { title: c.label }, cb, sw, el("span", { class: "lbl" }, c.label), el("span", { class: "n" }, c.count)));
+  }));
+}
+$("legend-all").onclick = () => { state.hidden[state.colorBy].clear(); renderLegend(); applyFilters(); reheat(0.5); };
+$("legend-none").onclick = () => { for (const c of CATS[state.colorBy].cats) state.hidden[state.colorBy].add(c.key); renderLegend(); applyFilters(); };
+
+// ---------- search ----------
+const q = $("q"), results = $("results"); let resultIdx = -1, resultNodes = [];
+function runSearch() {
+  const terms = fold(q.value).split(/\s+/).filter(Boolean);
+  if (!terms.length) { state.matches = null; results.hidden = true; q.setAttribute("aria-expanded", "false"); dirty = true; return; }
+  resultNodes = nodes.filter((n) => terms.every((t) => n.hay.includes(t))).sort((a, b) => b.warmth - a.warmth || a.name.localeCompare(b.name));
+  state.matches = new Set(resultNodes.map((n) => n.id)); resultIdx = -1;
+  results.replaceChildren(...(resultNodes.length ? resultNodes.slice(0, 30).map((n, i) => el("li", {},
+    el("button", { type: "button", role: "option", id: `r${i}`, "aria-selected": "false", on: { click: () => pick(n) } },
+      el("div", {}, n.name), el("div", { class: "sub" }, [n.position, n.company].filter(Boolean).join(" · "))))) :
+    [el("li", { class: "muted", style: "padding:6px 8px" }, "No matches")]));
+  results.hidden = false; q.setAttribute("aria-expanded", "true"); dirty = true;
+}
+function pick(n) {
+  if (!visible.includes(n)) { state.hidden[state.colorBy].delete(catKey(n)); state.onlyDm = false; $("f-dm").checked = false; state.cutoff = Infinity; $("cutoff").value = 1000; updateCutoffLabel(); renderLegend(); applyFilters(); }
+  results.hidden = true; q.setAttribute("aria-expanded", "false"); select(n); centerOn(n);
+}
+q.addEventListener("input", runSearch);
+q.addEventListener("keydown", (ev) => {
+  const items = [...results.querySelectorAll("button[role=option]")];
+  if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); if (!items.length) return;
+    resultIdx = (resultIdx + (ev.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+    items.forEach((b, i) => b.setAttribute("aria-selected", String(i === resultIdx))); items[resultIdx].scrollIntoView({ block: "nearest" });
+    q.setAttribute("aria-activedescendant", items[resultIdx].id); }
+  else if (ev.key === "Enter" && resultNodes.length) { ev.preventDefault(); pick(resultNodes[Math.max(0, resultIdx)]); }
+  else if (ev.key === "Escape") { q.value = ""; runSearch(); q.blur(); }
+});
+document.addEventListener("click", (ev) => { if (!ev.target.closest(".search")) { results.hidden = true; q.setAttribute("aria-expanded", "false"); } });
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "/" && document.activeElement !== q && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { ev.preventDefault(); q.focus(); }
+  else if (ev.key === "Escape" && document.activeElement !== q) { select(null); if (q.value) { q.value = ""; runSearch(); } }
+});
+
+// ---------- table view ----------
+let sortKey = "warmth", sortDir = -1;
+const COLS = [["name", "Name"], ["position", "Position"], ["company", "Company"], ["connected", "Connected"],
+  ["dmTotal", "Messages", true], ["byThem", "They started", true], ["replyH", "Reply (h)", true],
+  ["warmth", "Warmth", true], ["pagerank", "PageRank", true], ["communityLabel", "Community"], ["cohortLabel", "Cohort"]];
+function renderTable() {
+  const rows = [...visible].map((n) => Object.assign(n, { communityLabel: n.community >= 0 ? commLabel.get(n.community) : "",
+    cohortLabel: n.cohort >= 0 ? cohortLabel.get(n.cohort) : "", byThem: n.conv ? n.conv.by_them : null, replyH: n.conv ? n.conv.reply_h : null }));
+  rows.sort((a, b) => { const x = a[sortKey], y = b[sortKey];
+    if (x == null || y == null) return (x == null) - (y == null);
+    return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * sortDir; });
+  const head = el("tr", {}, COLS.map(([k, label, num]) => el("th", { class: num ? "num" : null, scope: "col", "aria-sort": k === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none" },
+    el("button", { type: "button", on: { click: () => { sortDir = k === sortKey ? -sortDir : (num ? -1 : 1); sortKey = k; renderTable(); } } }, label + (k === sortKey ? (sortDir > 0 ? " ↑" : " ↓") : "")))));
+  const body = rows.map((n) => el("tr", { tabindex: "0", on: { click: () => select(n), keydown: (e) => { if (e.key === "Enter") select(n); } } },
+    el("td", {}, el("span", { class: "sw", style: `display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:${nodeColor(n)}` }), n.name),
+    el("td", { class: "wrap" }, n.position), el("td", { class: "wrap" }, n.company), el("td", {}, n.connected || ""),
+    el("td", { class: "num" }, n.dmTotal), el("td", { class: "num" }, n.byThem ?? ""), el("td", { class: "num" }, n.replyH ?? ""),
+    el("td", { class: "num" }, n.warmth.toFixed(2)), el("td", { class: "num" }, `#${prRank.get(n.id)}`),
+    el("td", { class: "wrap" }, n.communityLabel), el("td", { class: "wrap" }, n.cohortLabel)));
+  $("table-wrap").replaceChildren(el("table", {}, el("caption", { class: "muted", style: "text-align:left;padding:8px 10px" },
+    `${rows.length} contacts (filters apply). Click a row for details.`), el("thead", {}, head), el("tbody", {}, body)));
+}
+$("table-btn").onclick = () => { state.table = !state.table; $("table-btn").setAttribute("aria-pressed", String(state.table));
+  $("table-wrap").hidden = !state.table; if (state.table) renderTable(); };
+
+// ---------- controls ----------
+function setRadio(groupId, attr, value) { for (const b of $(groupId).querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset[attr] === value)); }
+$("modes").addEventListener("click", (ev) => { const b = ev.target.closest("button"); if (!b) return;
+  state.mode = b.dataset.mode; setRadio("modes", "mode", state.mode); for (const n of visible) n.r = radius(n);
+  computeTargets(); reheat(1); pendingFit = true; });
+$("color-by").addEventListener("click", (ev) => { const b = ev.target.closest("button"); if (!b) return;
+  state.colorBy = b.dataset.color; setRadio("color-by", "color", state.colorBy); renderLegend(); applyFilters();
+  if (state.mode === "clusters" || timeAxis()) { reheat(1); pendingFit = true; } });
+$("f-dm").onchange = (e) => { state.onlyDm = e.target.checked; applyFilters(); reheat(0.5); };
+$("f-ego").onchange = (e) => { state.ego = e.target.checked; if (!state.ego && state.selected === me) select(null); dirty = true; };
+$("f-colleague").onchange = (e) => { state.colleague = e.target.checked; applyFilters(); reheat(0.4); };
+$("f-role").onchange = (e) => { state.role = e.target.checked; applyFilters(); reheat(0.4); };
+$("f-coactive").onchange = (e) => { state.coactive = e.target.checked; applyFilters(); reheat(0.4); };
+$("p-charge").oninput = (e) => { state.charge = +e.target.value; reheat(0.5); };
+$("p-link").oninput = (e) => { state.link = e.target.value / 100; reheat(0.5); };
+$("p-gravity").oninput = (e) => { state.gravity = e.target.value / 100; computeTargets(); reheat(0.5); };
+$("reheat").onclick = () => { reheat(1); pendingFit = true; };
+$("fit").onclick = () => fit(true);
+$("png").onclick = () => { draw(); canvas.toBlob((blob) => { if (!blob) return; const a = el("a", { href: URL.createObjectURL(blob), download: "network-graph.png" }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }); };
+$("menu-btn").onclick = () => { const open = $("side").classList.toggle("open"); $("menu-btn").setAttribute("aria-expanded", String(open)); };
+const cutoffAt = (v) => (v >= 1000 ? Infinity : tMin + (v / 1000) * (tMax - tMin));
+function updateCutoffLabel() { const t = state.cutoff; $("cutoff-out").textContent = t === Infinity ? "all" : new Date(t).toISOString().slice(0, 10); }
+$("cutoff").oninput = (e) => { state.cutoff = cutoffAt(+e.target.value); updateCutoffLabel(); applyFilters(); reheat(0.3); };
+let playing = null;
+$("play").onclick = () => {
+  if (playing) { clearInterval(playing); playing = null; $("play").textContent = "▶ Play growth"; return; }
+  let v = 0; $("play").textContent = "■ Stop";
+  playing = setInterval(() => { v = Math.min(1000, v + 8); $("cutoff").value = v; state.cutoff = cutoffAt(v); updateCutoffLabel(); applyFilters(); reheat(0.3);
+    if (v >= 1000) { clearInterval(playing); playing = null; $("play").textContent = "▶ Play growth"; } }, 60);
+};
+$("note").replaceChildren(
+  el("p", {}, `Data: your LinkedIn export, as of ${DATA.meta.as_of || "—"}. ${DATA.meta.contacts} contacts, ${DATA.meta.communities} communities, ${DATA.meta.with_dm} with messages.`),
+  el("p", {}, `Grey edges are inferred, not observed: ${DATA.meta.inference}`),
+  el("p", {}, `Warmth = ${DATA.meta.warmth_formula}.`),
+  ...(DATA.meta.temporal ? [el("p", {}, `Cohorts and co-activity: ${DATA.meta.temporal}`)] : []),
+  el("p", {}, "This file holds your contacts' data. Keep it on this machine."));
+
+// ---------- loop ----------
+function frame() {
+  if (alpha > ALPHA_MIN || alphaTarget > 0) {  // up to ~8 ms of ticks per frame: settles fast, stays smooth
+    const t0 = performance.now(); let ticks = 0;
+    do { tick(); ticks++; } while (ticks < 12 && alphaTarget === 0 && alpha > ALPHA_MIN && performance.now() - t0 < 8);
+    dirty = true;
+  }
+  if (pendingFit && alpha < 0.08) { fit(true); pendingFit = false; }
+  if (camGoal) { for (const k of ["x", "y", "k"]) cam[k] += (camGoal[k] - cam[k]) * 0.18;
+    if (Math.abs(camGoal.k - cam.k) < 0.001 && Math.abs(camGoal.x - cam.x) < 0.5 && Math.abs(camGoal.y - cam.y) < 0.5) { Object.assign(cam, camGoal); camGoal = null; } dirty = true; }
+  if (dirty && !state.table) { draw(); dirty = false; }
+  requestAnimationFrame(frame);
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { readTheme(); colorCache.clear(); renderLegend(); renderInspector(); });
+new ResizeObserver(resize).observe(stage);
+readTheme(); resize(); renderLegend(); updateCutoffLabel(); applyFilters(); seedPositions();
+cam.x = W / 2; cam.y = H / 2; cam.k = 0.5;
+// Open on a view from the address: graph.html#view=radar&color=domain (bookmarkable, works offline).
+const fromHash = new URLSearchParams(location.hash.slice(1));
+$("modes").querySelector(`[data-mode="${CSS.escape(fromHash.get("view") || "")}"]`)?.click();
+$("color-by").querySelector(`[data-color="${CSS.escape(fromHash.get("color") || "")}"]`)?.click();
+requestAnimationFrame(frame);
+window.__graph = { nodes, edges, state, cam, select: (id) => select(id === ME ? me : byId.get(id) || null), visible: () => visible.length, alpha: () => alpha };
+</script>
+</body>
+</html>

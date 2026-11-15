@@ -1,0 +1,4 @@
+From,To,Sent At,Message,Direction,inviterProfileUrl,inviteeProfileUrl
+Test Owner,Test Person02,"7/1/25, 9:15 AM","Hi Test, we met at the meetup.",OUTGOING,https://www.linkedin.com/in/test-owner,https://www.linkedin.com/in/test-person02
+Test Person05,Test Owner,"2/14/26, 8:00 PM",,INCOMING,https://www.linkedin.com/in/test-person05,https://www.linkedin.com/in/test-owner
+Test Owner,Pending Person,"11/1/26, 10:00 AM",,OUTGOING,https://www.linkedin.com/in/test-owner,https://www.linkedin.com/in/pending-person
