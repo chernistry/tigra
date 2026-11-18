@@ -52,8 +52,11 @@ def _build(args: argparse.Namespace) -> int:
     except (ExportError, FileNotFoundError, ValueError, csv.Error) as e:
         return _fail(str(e))
     page = args.out / "graph.html"
-    write_private(args.out / "graph.json", json.dumps(model, ensure_ascii=False, indent=1))
-    write_private(page, render_html(model))
+    try:
+        write_private(args.out / "graph.json", json.dumps(model, ensure_ascii=False, indent=1))
+        write_private(page, render_html(model))
+    except OSError as e:
+        return _fail(str(e))
     meta = model["meta"]
     print(
         f"{meta['contacts']} contacts · {meta['communities']} communities · {meta['with_dm']} you messaged · "

@@ -323,6 +323,7 @@ def test_owner_tie_without_profile_refuses_to_guess(con, tmp_path):
 def test_write_private_replaces_world_readable_file(tmp_path):
     from tigra.viz import write_private
 
+    tmp_path.chmod(0o700)
     target = tmp_path / "graph.json"
     target.write_text("old")
     target.chmod(0o644)
@@ -427,6 +428,21 @@ def test_cli_outputs_are_private(tmp_path):
     for path in (tmp_path / "g.duckdb", out / "graph.json", out / "graph.html"):
         assert stat.S_IMODE(path.stat().st_mode) == 0o600, path
     assert stat.S_IMODE(out.stat().st_mode) == 0o700
+
+
+@POSIX
+def test_cli_rejects_non_private_output_directory(tmp_path, capsys):
+    out = tmp_path / "out"
+    out.mkdir()
+    out.chmod(0o755)
+    target = out / "graph.json"
+    target.write_text("existing output")
+
+    assert cli.main(["build", str(EXPORT), "--out", str(out)]) == 2
+    assert "0700" in capsys.readouterr().err
+    assert target.read_text() == "existing output"
+    assert set(out.iterdir()) == {target}
+    assert stat.S_IMODE(out.stat().st_mode) == 0o755
 
 
 def test_export_error_names_the_problem(tmp_path):

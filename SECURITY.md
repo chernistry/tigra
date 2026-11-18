@@ -14,8 +14,9 @@ You will get an answer within 7 days. Fixes are released as a patch version and 
 - The generated `graph.html` carries a Content-Security-Policy of `default-src 'none'`: no scripts,
   styles, fonts or images from anywhere else, and no outgoing connections.
 - Contact data is embedded as escaped JSON and inserted with `textContent`, never as HTML.
-- Output files are created readable by your user only (mode 0600). An output folder the tool creates is 0700;
-  a folder that already exists keeps its permissions.
+- On POSIX, output files have mode 0600 and the output folder must have mode 0700. The tool creates a
+  private folder if needed and refuses to write to an existing folder with a different mode.
+  On Windows, use an output folder whose access permissions restrict it to your account.
 - Message and invitation text is never stored or written out: only who, which conversation, when, which way,
   and whether an invitation had a note.
 
